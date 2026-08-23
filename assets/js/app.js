@@ -206,6 +206,7 @@
   function readCriteria() {
     return {
       sex: segState.sex,
+      seekerSex: segState.seekerSex,
       ageMin: ageVals[0],
       ageMax: ageVals[1],
       heightMin: heightVals[0],
