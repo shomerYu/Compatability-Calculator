@@ -148,6 +148,18 @@ const CALC = (() => {
     return clamp01(base * f);
   }
 
+  /* ההסתברות שאדם מהמין המבוקש נמשך למין של המחפש/ת.
+     ביסקסואלים נספרים בשני הכיוונים. אומדן — ראו ORIENTATION ב-data.js. */
+  function pOrientation(targetSex, seekerSex, age) {
+    const o = D.ORIENTATION[targetSex];
+    if (!o || !seekerSex) return 1;
+    const f = D.pickBand(D.ORIENTATION.ageFactorBands, age).f;
+    const bi = Math.min(1, o.bi * f);
+    const homo = Math.min(1, o.homo * f);
+    const straight = Math.max(0, 1 - bi - homo - o.none);
+    return clamp01(targetSex === seekerSex ? homo + bi : straight + bi);
+  }
+
   function pUnmarried(sex, age) {
     return clamp01(D.pickBand(D.UNMARRIED_BANDS, age)[sex]);
   }
@@ -198,6 +210,7 @@ const CALC = (() => {
       const mix = groupMix(a, c.groups);
       let p = 1;
       p *= pH;
+      p *= pOrientation(sex, c.seekerSex, a);
       p *= pGroup(a, c.groups);
       p *= pReligiosity(mix, c.religiosity);
       p *= pDistrict(mix, c.districts);
@@ -261,6 +274,15 @@ const CALC = (() => {
 
     rows.push({ label: `גובה \u2066${c.heightMin}\u2013${c.heightMax}\u2069 ס"מ`, share: pH });
 
+    if (c.seekerSex) {
+      const verb = m ? 'נמשכים' : 'נמשכות';
+      const toward = c.seekerSex === 'male' ? 'לגברים' : 'לנשים';
+      rows.push({
+        label: `${verb} ${toward} (אומדן)`,
+        share: weightedAvg(a => pOrientation(sex, c.seekerSex, a))
+      });
+    }
+
     if (c.groups && c.groups.length) {
       const labels = c.groups.map(g => (D.GROUPS.find(x => x.id === g) || {}).label).join(', ');
       rows.push({ label: labels, share: weightedAvg(a => pGroup(a, c.groups)) });
@@ -307,7 +329,7 @@ const CALC = (() => {
     return rows;
   }
 
-  return { calculate, normalCdf, logNormalTail, pHeight, pIncomeAtLeast };
+  return { calculate, normalCdf, logNormalTail, pHeight, pIncomeAtLeast, pOrientation };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = CALC;
