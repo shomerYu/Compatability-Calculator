@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>מתאים? — כמה אנשים בישראל עומדים בסטנדרטים שלך</title>
+<meta name="description" content="מחשבון התאמה דמוגרפי לישראל. מחושב לפי נתוני הלשכה המרכזית לסטטיסטיקה ומשרד הבריאות.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2322331f'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23f3ece1' font-family='Georgia,serif'%3E%3F%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar__inner">
+    <a class="brand" href="#">מתאים<span>?</span></a>
+    <nav class="topbar__nav">
+      <a href="#calc">המחשבון</a>
+      <a href="#sources">מקורות</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="calc">
+
+  <h1 class="hero" id="hero">
+    כמה <span id="heroTarget">נשים</span> בישראל
+    עומדות בסטנדרטים שלך?
+  </h1>
+
+  <form id="form" class="panel" autocomplete="off">
+
+    <div class="row">
+      <label class="row__label">אני מחפש/ת</label>
+      <div class="seg" data-name="sex">
+        <button type="button" class="seg__btn is-on" data-value="female">נשים</button>
+        <button type="button" class="seg__btn" data-value="male">גברים</button>
+      </div>
+    </div>
+
+    <div class="row row--range">
+      <label class="row__label">גיל</label>
+      <div class="range" id="ageRange"
+           data-min="18" data-max="70" data-from="28" data-to="38" data-step="1"></div>
+      <output class="row__out" id="ageOut"><span dir="ltr">28–38</span></output>
+    </div>
+
+    <div class="row row--range">
+      <label class="row__label">גובה</label>
+      <div class="range" id="heightRange"
+           data-min="140" data-max="200" data-from="160" data-to="180" data-step="1"></div>
+      <output class="row__out" id="heightOut"><span dir="ltr">160–180</span> ס״מ</output>
+    </div>
+
+    <div class="row row--range">
+      <label class="row__label">הכנסה חודשית מינימלית</label>
+      <div class="range range--single" id="incomeRange"
+           data-min="0" data-max="40000" data-from="0" data-step="500"></div>
+      <output class="row__out" id="incomeOut"><span dir="ltr">0</span> ₪</output>
+    </div>
+
+    <div class="row">
+      <label class="row__label" for="group">דת / קבוצת אוכלוסייה</label>
+      <select id="group" class="sel"><option value="any">הכול</option></select>
+    </div>
+
+    <div class="row" id="religiosityRow">
+      <label class="row__label" for="religiosity">רמת דתיות</label>
+      <select id="religiosity" class="sel"><option value="any">הכול</option></select>
+    </div>
+
+    <div class="row">
+      <label class="row__label" for="district">אזור מגורים</label>
+      <select id="district" class="sel"><option value="any">הכול</option></select>
+    </div>
+
+    <div class="row">
+      <label class="row__label" for="education">השכלה מינימלית</label>
+      <select id="education" class="sel"><option value="any">הכול</option></select>
+    </div>
+
+    <div class="row">
+      <label class="row__label">מעשן/ת</label>
+      <div class="seg" data-name="smokes">
+        <button type="button" class="seg__btn is-on" data-value="any">הכול</button>
+        <button type="button" class="seg__btn" data-value="yes">כן</button>
+        <button type="button" class="seg__btn" data-value="no">לא</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="row__label">שותה אלכוהול</label>
+      <div class="seg" data-name="drinks">
+        <button type="button" class="seg__btn is-on" data-value="any">הכול</button>
+        <button type="button" class="seg__btn" data-value="yes">כן</button>
+        <button type="button" class="seg__btn" data-value="no">לא</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="row__label">רק לא נשואים</label>
+      <div class="seg" data-name="excludeMarried">
+        <button type="button" class="seg__btn is-on" data-value="yes">כן</button>
+        <button type="button" class="seg__btn" data-value="no">לא</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="row__label">ללא השמנה <small>(BMI מתחת ל-30)</small></label>
+      <div class="seg" data-name="excludeObese">
+        <button type="button" class="seg__btn" data-value="yes">כן</button>
+        <button type="button" class="seg__btn is-on" data-value="no">לא</button>
+      </div>
+    </div>
+
+    <details class="extras">
+      <summary>
+        מאפיינים ללא מקור ממשלתי
+        <span class="tag">אומדן</span>
+      </summary>
+      <p class="extras__note">
+        למדינת ישראל אין נתונים רשמיים על צבע שיער, צבע עיניים או כוונות ילודה ברמת הפרט.
+        השדות האלה מבוססים על אומדנים בלבד, ולכן הם מחוץ למחשבון עצמו כברירת מחדל.
+      </p>
+
+      <div class="row">
+        <label class="row__label">רוצה ילדים</label>
+        <div class="seg" data-name="wantsKids">
+          <button type="button" class="seg__btn is-on" data-value="any">הכול</button>
+          <button type="button" class="seg__btn" data-value="yes">כן</button>
+          <button type="button" class="seg__btn" data-value="no">לא</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label class="row__label" for="hair">צבע שיער</label>
+        <select id="hair" class="sel"><option value="any">הכול</option></select>
+      </div>
+
+      <div class="row">
+        <label class="row__label" for="eyes">צבע עיניים</label>
+        <select id="eyes" class="sel"><option value="any">הכול</option></select>
+      </div>
+    </details>
+
+    <button type="submit" class="cta">בואו נגלה</button>
+
+    <p class="disclaimer">
+      מחושב לפי נתוני הלשכה המרכזית לסטטיסטיקה ומשרד הבריאות
+    </p>
+  </form>
+
+  <section class="result" id="result" hidden aria-live="polite">
+    <div class="result__figure">
+      <div class="result__pct" id="resultPct">—</div>
+      <p class="result__sub" id="resultSub"></p>
+    </div>
+
+    <div class="result__bars">
+      <h2>מה חתך את המספר</h2>
+      <ul id="breakdown" class="bars"></ul>
+    </div>
+
+    <button type="button" class="ghost" id="resetBtn">חישוב חדש</button>
+  </section>
+
+  <section class="method" id="sources">
+    <h2>שיטת החישוב</h2>
+    <p>
+      החישוב מתחיל מאוכלוסיית הבוגרים בישראל בגילי <span dir="ltr">18–70</span> לפי מין, כפי שהיא מדווחת
+      בלוחות האוכלוסייה של הלמ״ס. לכל שנת גיל נלקח גודל האוכלוסייה בפועל, ומוכפלות בו
+      ההסתברויות של שאר התנאים — חלקן מותנות בגיל, במין ובקבוצת האוכלוסייה.
+    </p>
+    <p>
+      המודל מניח אי-תלות בין התנאים בהינתן גיל ומין. בפועל קיימות תלויות
+      (למשל בין השכלה להכנסה, או בין אזור מגורים לקבוצת אוכלוסייה — שתיהן כן ממודלות כאן),
+      ולכן התוצאה היא סדר גודל ולא מספר מדויק.
+    </p>
+    <p>
+      התפלגות הגובה מקורבת להתפלגות נורמלית לפי הממוצע וסטיית התקן.
+      התפלגות ההכנסה מקורבת להתפלגות לוג-נורמלית שנגזרת מזוג הממוצע והחציון
+      שמפרסמת הלמ״ס, ומוכפלת בשיעור המועסקים באותו גיל ומין.
+    </p>
+
+    <h2>מקורות</h2>
+    <ul class="sources" id="sourcesList"></ul>
+
+    <p class="method__caveat">
+      חלק מהערכים חושבו על ידי כיול לנתונים המפורסמים ולא הועתקו מלוח יחיד.
+      כל מספר מופיע בקובץ <code>assets/js/data.js</code> יחד עם המקור שלו וניתן לעדכון.
+    </p>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <p>נבנה מנתונים ציבוריים של מדינת ישראל. אין לראות בתוצאה ייעוץ מכל סוג.</p>
+  </div>
+</footer>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/calc.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
