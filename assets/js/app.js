@@ -96,7 +96,7 @@
     sel.innerHTML = '';
     const any = document.createElement('option');
     any.value = 'any';
-    any.textContent = anyLabel || 'הכול';
+    any.textContent = anyLabel || 'הכל';
     sel.appendChild(any);
     items.forEach(it => {
       const o = document.createElement('option');
@@ -112,7 +112,7 @@
       DATA.RELIGIOSITY.order.map(id => ({ id, label: DATA.RELIGIOSITY.labels[id] })));
     fillSelect($('#district'), DATA.DISTRICTS);
     fillSelect($('#education'),
-      DATA.EDUCATION_LEVELS.filter(l => l.id !== 'none'), 'הכול');
+      DATA.EDUCATION_LEVELS.filter(l => l.id !== 'none'), 'הכל');
     fillSelect($('#hair'), DATA.HAIR.options);
     fillSelect($('#eyes'), DATA.EYES.options);
 
