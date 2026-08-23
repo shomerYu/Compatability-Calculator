@@ -91,6 +91,58 @@
     return { values, paint };
   }
 
+  /* ---------------- chip groups (multi-select) ---------------- */
+  /* כל קבוצה מתחילה ב"הכל". בחירה של ערך מכבה את "הכל", וכיבוי הערך
+     האחרון מחזיר אותו — כך תמיד יש מצב מוגדר. */
+  function fillChips(el, items) {
+    el.innerHTML = '';
+    const mk = (value, label, on) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (on ? ' is-on' : '');
+      b.dataset.value = value;
+      b.textContent = label;
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      el.appendChild(b);
+      return b;
+    };
+    mk('any', 'הכל', true);
+    items.forEach(it => mk(it.id, it.label, false));
+
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      const all = $$('.chip', el);
+      const anyBtn = all[0];
+
+      if (btn === anyBtn) {
+        all.forEach(b => setChip(b, b === anyBtn));
+      } else {
+        setChip(btn, !btn.classList.contains('is-on'));
+        const picked = all.slice(1).some(b => b.classList.contains('is-on'));
+        setChip(anyBtn, !picked);
+      }
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  function setChip(btn, on) {
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+
+  /* [] פירושו "הכל" — כך גם מנוע החישוב מפרש רשימה ריקה */
+  function chipValues(id) {
+    const el = $('#' + id);
+    const on = $$('.chip.is-on', el).map(b => b.dataset.value);
+    return on.includes('any') ? [] : on;
+  }
+
+  function resetChips(id) {
+    const all = $$('.chip', $('#' + id));
+    all.forEach((b, i) => setChip(b, i === 0));
+  }
+
   /* ---------------- selects ---------------- */
   function fillSelect(sel, items, anyLabel) {
     sel.innerHTML = '';
@@ -106,25 +158,27 @@
     });
   }
 
-  function initSelects() {
-    fillSelect($('#group'), DATA.GROUPS);
-    fillSelect($('#religiosity'),
+  function initControls() {
+    fillChips($('#group'), DATA.GROUPS);
+    fillChips($('#religiosity'),
       DATA.RELIGIOSITY.order.map(id => ({ id, label: DATA.RELIGIOSITY.labels[id] })));
-    fillSelect($('#district'), DATA.DISTRICTS);
+    fillChips($('#district'), DATA.DISTRICTS);
+    fillChips($('#hair'), DATA.HAIR.options);
+    fillChips($('#eyes'), DATA.EYES.options);
+
+    /* השכלה נשארת בחירה יחידה — היא רמת סף, לא רשימה */
     fillSelect($('#education'),
       DATA.EDUCATION_LEVELS.filter(l => l.id !== 'none'), 'הכל');
-    fillSelect($('#hair'), DATA.HAIR.options);
-    fillSelect($('#eyes'), DATA.EYES.options);
 
     /* רמת דתיות נמדדת באוכלוסייה היהודית — מבהירים זאת בממשק */
     const relRow = $('#religiosityRow');
-    const relSel = $('#religiosity');
+    const relChips = $('#religiosity');
     function syncReligiosity() {
-      const g = $('#group').value;
-      const relevant = (g === 'any' || g === 'jewish');
-      relRow.style.opacity = relevant ? '1' : '.45';
-      relSel.disabled = !relevant;
-      if (!relevant) relSel.value = 'any';
+      const groups = chipValues('group');
+      const relevant = groups.length === 0 || groups.includes('jewish');
+      relRow.classList.toggle('is-muted', !relevant);
+      relChips.classList.toggle('is-off', !relevant);
+      if (!relevant) resetChips('religiosity');
     }
     $('#group').addEventListener('change', syncReligiosity);
     syncReligiosity();
@@ -150,10 +204,6 @@
 
   /* ---------------- criteria + run ---------------- */
   function readCriteria() {
-    const one = id => {
-      const v = $('#' + id).value;
-      return v === 'any' ? [] : [v];
-    };
     return {
       sex: segState.sex,
       ageMin: ageVals[0],
@@ -161,17 +211,17 @@
       heightMin: heightVals[0],
       heightMax: heightVals[1],
       minIncome: incomeVal,
-      groups: one('group'),
-      religiosity: one('religiosity'),
-      districts: one('district'),
+      groups: chipValues('group'),
+      religiosity: chipValues('religiosity'),
+      districts: chipValues('district'),
       education: $('#education').value,
       smokes: segState.smokes,
       drinks: segState.drinks,
       wantsKids: segState.wantsKids,
       excludeMarried: segState.excludeMarried === 'yes',
       excludeObese: segState.excludeObese === 'yes',
-      hair: one('hair'),
-      eyes: one('eyes')
+      hair: chipValues('hair'),
+      eyes: chipValues('eyes')
     };
   }
 
@@ -241,7 +291,7 @@
   /* ---------------- boot ---------------- */
   document.addEventListener('DOMContentLoaded', () => {
     initSegments();
-    initSelects();
+    initControls();
     initRanges();
     initSources();
     updateHero();
