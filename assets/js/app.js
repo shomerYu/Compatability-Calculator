@@ -287,8 +287,17 @@
       if (Number.isFinite(v)) ranges.income.set(0, v);
     }
 
+    /* שלושת גווני החום אוחדו לערך אחד; קישורים ישנים ממשיכים לעבוד */
+    const ALIAS = { hair: { dark_brown: 'brown', light_brown: 'brown' } };
     const chips = (key, id) => {
-      if (p.has(key)) setChips(id, p.get(key).split(',').filter(Boolean));
+      if (!p.has(key)) return;
+      const map = ALIAS[id] || {};
+      const seen = [];
+      p.get(key).split(',').filter(Boolean).forEach(v => {
+        const mapped = map[v] || v;
+        if (seen.indexOf(mapped) === -1) seen.push(mapped);
+      });
+      setChips(id, seen);
     };
     chips('g', 'group');
     chips('rel', 'religiosity');
