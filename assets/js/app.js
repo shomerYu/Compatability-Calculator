@@ -87,8 +87,20 @@
       paint();
     });
 
+    /* קביעת ערך מבחוץ — משמש לשחזור מצב מקישור משותף */
+    function set(lo, hi) {
+      const fit = v => Math.min(max, Math.max(min, Math.round(v / step) * step));
+      if (single) {
+        a.value = fit(hi);
+      } else {
+        const l = fit(Math.min(lo, hi)), h = fit(Math.max(lo, hi));
+        a.value = l; b.value = h;
+      }
+      paint();
+    }
+
     paint();
-    return { values, paint };
+    return { values, paint, set };
   }
 
   /* ---------------- chip groups (multi-select) ---------------- */
@@ -187,19 +199,147 @@
   /* ---------------- ranges ---------------- */
   let ageVals = [28, 38], heightVals = [160, 180], incomeVal = 0;
 
+  const ranges = {};
+
   function initRanges() {
-    initRange($('#ageRange'), null, v => {
+    ranges.age = initRange($('#ageRange'), null, v => {
       ageVals = v;
       $('#ageOut').innerHTML = ltr(v[0] + '–' + v[1]);
     });
-    initRange($('#heightRange'), null, v => {
+    ranges.height = initRange($('#heightRange'), null, v => {
       heightVals = v;
       $('#heightOut').innerHTML = ltr(v[0] + '–' + v[1]) + ' ס״מ';
     });
-    initRange($('#incomeRange'), null, v => {
+    ranges.income = initRange($('#incomeRange'), null, v => {
       incomeVal = v[1];
       $('#incomeOut').innerHTML = ltr(nf.format(v[1])) + ' ₪';
     });
+  }
+
+  /* ---------------- state setters (used to restore a shared link) ---------------- */
+  function setSeg(name, value) {
+    const seg = document.querySelector('.seg[data-name="' + name + '"]');
+    if (!seg) return;
+    const btn = seg.querySelector('.seg__btn[data-value="' + value + '"]');
+    if (!btn) return;                      /* ערך לא מוכר מהקישור — מתעלמים */
+    $$('.seg__btn', seg).forEach(b => b.classList.toggle('is-on', b === btn));
+    segState[name] = btn.dataset.value;
+  }
+
+  function setChips(id, values) {
+    const el = $('#' + id);
+    if (!el) return;
+    const all = $$('.chip', el);
+    if (!all.length) return;
+    if (!values.length) {
+      all.forEach((b, i) => setChip(b, i === 0));
+      return;
+    }
+    all.forEach(b => setChip(b, values.indexOf(b.dataset.value) !== -1));
+    setChip(all[0], false);
+    if (!$$('.chip.is-on', el).length) setChip(all[0], true);  /* שום ערך לא הוכר */
+  }
+
+  /* ---------------- share link ---------------- */
+  const SEX = { male: 'm', female: 'f' };
+  const SEX_BACK = { m: 'male', f: 'female' };
+
+  function buildShareUrl(c) {
+    const p = new URLSearchParams();
+    p.set('me', SEX[c.seekerSex]);
+    p.set('for', SEX[c.sex]);
+    p.set('age', c.ageMin + '-' + c.ageMax);
+    p.set('h', c.heightMin + '-' + c.heightMax);
+    if (c.minIncome) p.set('inc', c.minIncome);
+    if (c.groups.length) p.set('g', c.groups.join(','));
+    if (c.religiosity.length) p.set('rel', c.religiosity.join(','));
+    if (c.districts.length) p.set('d', c.districts.join(','));
+    if (c.education !== 'any') p.set('edu', c.education);
+    if (c.smokes !== 'any') p.set('smk', c.smokes);
+    if (c.drinks !== 'any') p.set('drk', c.drinks);
+    if (c.bald !== 'any') p.set('bald', c.bald);
+    if (c.wantsKids !== 'any') p.set('kids', c.wantsKids);
+    /* לשני אלה יש ברירת מחדל שאינה "הכל", ולכן הם נכתבים תמיד */
+    p.set('single', c.excludeMarried ? '1' : '0');
+    p.set('nofat', c.excludeObese ? '1' : '0');
+    if (c.hair.length) p.set('hair', c.hair.join(','));
+    if (c.eyes.length) p.set('eyes', c.eyes.join(','));
+    return location.origin + location.pathname + '?' + p.toString();
+  }
+
+  /* ערכים מקישור הם קלט לא מהימן — כל אחד נבדק מול הערכים המוכרים */
+  function applyShareUrl() {
+    const p = new URLSearchParams(location.search);
+    if (!Array.from(p.keys()).length) return false;
+
+    if (p.has('me')) setSeg('seekerSex', SEX_BACK[p.get('me')]);
+    if (p.has('for')) setSeg('sex', SEX_BACK[p.get('for')]);
+
+    const pair = (key, ctl) => {
+      if (!p.has(key) || !ctl) return;
+      const parts = p.get(key).split('-').map(Number);
+      if (parts.length === 2 && parts.every(Number.isFinite)) ctl.set(parts[0], parts[1]);
+    };
+    pair('age', ranges.age);
+    pair('h', ranges.height);
+    if (p.has('inc') && ranges.income) {
+      const v = Number(p.get('inc'));
+      if (Number.isFinite(v)) ranges.income.set(0, v);
+    }
+
+    const chips = (key, id) => {
+      if (p.has(key)) setChips(id, p.get(key).split(',').filter(Boolean));
+    };
+    chips('g', 'group');
+    chips('rel', 'religiosity');
+    chips('d', 'district');
+    chips('hair', 'hair');
+    chips('eyes', 'eyes');
+
+    if (p.has('edu')) {
+      const sel = $('#education');
+      const wanted = p.get('edu');
+      if (Array.from(sel.options).some(o => o.value === wanted)) sel.value = wanted;
+    }
+
+    ['smk:smokes', 'drk:drinks', 'bald:bald', 'kids:wantsKids'].forEach(pairing => {
+      const [key, name] = pairing.split(':');
+      if (p.has(key)) setSeg(name, p.get(key));
+    });
+    if (p.has('single')) setSeg('excludeMarried', p.get('single') === '1' ? 'yes' : 'no');
+    if (p.has('nofat')) setSeg('excludeObese', p.get('nofat') === '1' ? 'yes' : 'no');
+
+    updateHero();
+    $('#group').dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+
+  async function copyLink(url) {
+    try {
+      await navigator.clipboard.writeText(url);
+      return true;
+    } catch (e) { /* חסום בהקשרים מסוימים — ננסה דרך אחרת */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function flash(btn, msg) {
+    const original = btn.dataset.label || btn.textContent;
+    btn.dataset.label = original;
+    btn.textContent = msg;
+    clearTimeout(btn._t);
+    btn._t = setTimeout(() => { btn.textContent = btn.dataset.label; }, 2400);
   }
 
   /* ---------------- criteria + run ---------------- */
@@ -236,6 +376,8 @@
     return p.toExponential(1) + '%';
   }
 
+  let lastShare = null;
+
   function render(res, c) {
     const noun = c.sex === 'male' ? 'גברים' : 'נשים';
     const verb = c.sex === 'male' ? 'עומדים' : 'עומדות';
@@ -266,6 +408,17 @@
       li.querySelector('.bars__label').textContent = row.label;
       ul.appendChild(li);
     });
+
+    /* הקישור משקף את התוצאה שעל המסך, וגם נכנס לשורת הכתובת */
+    const url = buildShareUrl(c);
+    const pctText = $('#resultPct').textContent.trim();
+    lastShare = {
+      url: url,
+      text: `${pctText} ${c.sex === 'male' ? 'מהגברים' : 'מהנשים'} בישראל ` +
+            `${c.sex === 'male' ? 'עומדים' : 'עומדות'} בסטנדרטים שלי`
+    };
+    try { history.replaceState(null, '', url); } catch (e) { /* לא קריטי */ }
+    $('#shareFallback').hidden = true;
 
     const box = $('#result');
     box.hidden = false;
@@ -298,14 +451,45 @@
     initSources();
     updateHero();
 
-    $('#form').addEventListener('submit', e => {
-      e.preventDefault();
+    function run() {
       const c = readCriteria();
       render(CALC.calculate(c), c);
+    }
+
+    $('#form').addEventListener('submit', e => {
+      e.preventDefault();
+      run();
     });
+
+    $('#shareBtn').addEventListener('click', async () => {
+      if (!lastShare) return;
+      const btn = $('#shareBtn');
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'מתאים?', text: lastShare.text, url: lastShare.url });
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;   /* המשתמש ביטל */
+        }
+      }
+      if (await copyLink(lastShare.url)) {
+        flash(btn, 'הקישור הועתק');
+      } else {
+        const box = $('#shareFallback');
+        $('#shareUrl').value = lastShare.url;
+        box.hidden = false;
+        $('#shareUrl').select();
+        flash(btn, 'העתיקו ידנית');
+      }
+    });
+
+    /* קישור משותף — משחזרים את הבחירות ומריצים מיד */
+    if (applyShareUrl()) run();
 
     $('#resetBtn').addEventListener('click', () => {
       $('#result').hidden = true;
+      lastShare = null;
+      try { history.replaceState(null, '', location.pathname); } catch (e) { /* לא קריטי */ }
       $('#calc').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });

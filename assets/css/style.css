@@ -188,6 +188,17 @@ body{
   font-family:inherit;font-size:1rem;padding:15px;cursor:pointer;
 }
 .ghost:hover{background:rgba(255,255,255,.08)}
+.result__actions{display:flex;gap:10px;margin-top:26px}
+.result__actions .ghost{margin-top:0;flex:1}
+.ghost--primary{background:rgba(255,255,255,.12);border-color:transparent;font-weight:500}
+.ghost--primary:hover{background:rgba(255,255,255,.2)}
+.result__link{margin:12px 0 0;font-size:.85rem;color:var(--cream-2)}
+.result__link label{display:block;margin-bottom:6px}
+.result__link input{
+  width:100%;border:1px solid rgba(255,255,255,.3);border-radius:8px;
+  background:rgba(0,0,0,.2);color:#fff;font:inherit;font-size:.8rem;padding:9px 11px;
+}
+@media (max-width:400px){.result__actions{flex-direction:column}}
 
 /* ---------- method / sources ---------- */
 .method{margin:52px 0 40px;border-top:1px solid var(--line);padding-top:30px}

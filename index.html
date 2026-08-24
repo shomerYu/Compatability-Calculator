@@ -174,7 +174,14 @@
       <ul id="breakdown" class="bars"></ul>
     </div>
 
-    <button type="button" class="ghost" id="resetBtn">חישוב חדש</button>
+    <div class="result__actions">
+      <button type="button" class="ghost ghost--primary" id="shareBtn">שיתוף התוצאה</button>
+      <button type="button" class="ghost" id="resetBtn">חישוב חדש</button>
+    </div>
+    <p class="result__link" id="shareFallback" hidden>
+      <label for="shareUrl">העתיקו את הקישור:</label>
+      <input type="text" id="shareUrl" readonly dir="ltr">
+    </p>
   </section>
 
   <section class="method" id="sources">
