@@ -113,15 +113,60 @@ const CALC = (() => {
     return clamp01(s);
   }
 
-  function pIncomeAtLeast(sex, age, minIncome) {
+  function pIncomeAtLeast(sex, age, minIncome, eduFactor) {
     if (!minIncome || minIncome <= 0) return 1;
     const inc = D.INCOME[sex];
     const ageF = D.pickBand(D.INCOME.ageFactorBands, age).f;
     const empBand = D.pickBand(D.INCOME.employmentBands, age);
     const employed = empBand[sex];
-    const median = inc.median * ageF;
-    const mean = inc.mean * ageF;
-    return clamp01(employed * logNormalTail(minIncome, median, mean));
+    const f = ageF * (eduFactor || 1);
+    return clamp01(employed * logNormalTail(minIncome, inc.median * f, inc.mean * f));
+  }
+
+  /* השכלה והכנסה מחושבות יחד ולא כשני תנאים בלתי תלויים: מי שיש לו תואר
+     משתכר יותר, ולכן הכפלה נפרדת של שני הסינונים מורידה את התוצאה הרבה
+     מתחת למציאות. הסכימה עוברת על רמות ההשכלה שעומדות בתנאי, ולכל אחת
+     מחשבת את ההכנסה בהינתן אותה רמה.
+     המקדמים מנורמלים לממוצע 1 לפי התפלגות ההשכלה באותו גיל ומין, כך
+     שרמת ההכנסה הכללית — שכוילה מהממוצע והחציון — אינה זזה. */
+  function eduIncomeFactors(sex, age) {
+    const dist = D.pickBand(D.EDUCATION_BANDS, age)[sex];
+    const raw = D.INCOME.byEducation;
+    let base = 0;
+    for (let i = 0; i < dist.length; i++) base += dist[i] * raw[i];
+    return { dist: dist, factor: i => (base > 0 ? raw[i] / base : 1) };
+  }
+
+  function pEducationAndIncome(sex, age, minLevelId, minIncome) {
+    const { dist, factor } = eduIncomeFactors(sex, age);
+    let from = 0;
+    if (minLevelId && minLevelId !== 'any') {
+      from = D.EDUCATION_LEVELS.findIndex(l => l.id === minLevelId);
+      if (from < 0) from = 0;
+    }
+    let p = 0;
+    for (let i = from; i < dist.length; i++) {
+      if (dist[i] <= 0) continue;
+      p += dist[i] * pIncomeAtLeast(sex, age, minIncome, factor(i));
+    }
+    return clamp01(p);
+  }
+
+  /* צבע עיניים מותנה בצבע שיער — ראו EYES_BY_HAIR ב-data.js */
+  function pHairAndEyes(hairSel, eyeSel) {
+    const hairs = (hairSel && hairSel.length)
+      ? D.HAIR.options.filter(o => hairSel.indexOf(o.id) !== -1)
+      : D.HAIR.options;
+    let p = 0;
+    for (const h of hairs) {
+      const row = D.EYES_BY_HAIR[h.id];
+      if (!row) { p += h.p; continue; }
+      if (!eyeSel || !eyeSel.length) { p += h.p; continue; }
+      let inner = 0;
+      for (const e of eyeSel) inner += row[e] || 0;
+      p += h.p * inner;
+    }
+    return clamp01(p);
   }
 
   function pSmokes(sex, age) {
@@ -173,13 +218,6 @@ const CALC = (() => {
     return clamp01(D.pickBand(D.WANTS_KIDS_BANDS, age).p);
   }
 
-  function pFromOptions(list, selected) {
-    if (!selected || selected.length === 0) return 1;
-    let s = 0;
-    for (const o of list.options) if (selected.includes(o.id)) s += o.p;
-    return clamp01(s);
-  }
-
   /* ---------------------------------------------------------------
    * החישוב המרכזי
    * criteria = {
@@ -205,8 +243,7 @@ const CALC = (() => {
     const ageMax = Math.min(D.AGE_MAX, c.ageMax);
 
     const pH = pHeight(sex, c.heightMin, c.heightMax);
-    const pHair = pFromOptions(D.HAIR, c.hair);
-    const pEyes = pFromOptions(D.EYES, c.eyes);
+    const pLooks = pHairAndEyes(c.hair, c.eyes);
 
     for (let a = ageMin; a <= ageMax; a++) {
       const base = D.AGE_TABLE[a][sex];
@@ -219,8 +256,7 @@ const CALC = (() => {
       p *= pGroup(a, c.groups);
       p *= pReligiosity(mix, c.religiosity);
       p *= pDistrict(mix, c.districts);
-      p *= pEducationAtLeast(sex, a, c.education);
-      p *= pIncomeAtLeast(sex, a, c.minIncome);
+      p *= pEducationAndIncome(sex, a, c.education, c.minIncome);
 
       if (c.smokes === 'yes') p *= pSmokes(sex, a);
       else if (c.smokes === 'no') p *= (1 - pSmokes(sex, a));
@@ -237,8 +273,7 @@ const CALC = (() => {
       if (c.bald === 'yes') p *= pBald(sex, a);
       else if (c.bald === 'no') p *= (1 - pBald(sex, a));
 
-      p *= pHair;
-      p *= pEyes;
+      p *= pLooks;
 
       matched += base * p;
     }
@@ -248,12 +283,12 @@ const CALC = (() => {
       count: matched,
       totalPool: denominator,
       ageRangePool: ageOnly,
-      breakdown: buildBreakdown(c, sex, ageMin, ageMax, denominator, pH, pHair, pEyes)
+      breakdown: buildBreakdown(c, sex, ageMin, ageMax, denominator, pH, pLooks)
     };
   }
 
   /* פירוט השפעת כל תנאי בנפרד — כל שורה היא שיעור השורדים מהתנאי */
-  function buildBreakdown(c, sex, ageMin, ageMax, denominator, pH, pHair, pEyes) {
+  function buildBreakdown(c, sex, ageMin, ageMax, denominator, pH, pLooks) {
     const rows = [];
     const m = sex === 'male';
     const T = {
@@ -307,10 +342,20 @@ const CALC = (() => {
     }
     if (c.education && c.education !== 'any') {
       const lvl = D.EDUCATION_LEVELS.find(l => l.id === c.education);
-      rows.push({ label: `השכלה: ${lvl ? lvl.label : ''} ומעלה`, share: weightedAvg(a => pEducationAtLeast(sex, a, c.education)) });
+      /* "תואר שני ומעלה" כבר מסתיים ב"ומעלה" — לא מוסיפים פעמיים */
+      const name = lvl ? lvl.label : '';
+      const suffix = /ומעלה$/.test(name) ? '' : ' ומעלה';
+      rows.push({ label: `השכלה: ${name}${suffix}`, share: weightedAvg(a => pEducationAtLeast(sex, a, c.education)) });
     }
     if (c.minIncome > 0) {
-      rows.push({ label: `הכנסה מ-\u2066${c.minIncome.toLocaleString('he-IL')}\u2069 ש"ח`, share: weightedAvg(a => pIncomeAtLeast(sex, a, c.minIncome)) });
+      /* השורה מותנית בהשכלה שכבר נחתכה למעלה, כך שמכפלת שתי השורות היא
+         ההסתברות המשותפת הנכונה ולא מכפלה של שני תנאים בלתי תלויים */
+      const joint = weightedAvg(a => pEducationAndIncome(sex, a, c.education, c.minIncome));
+      const edu = weightedAvg(a => pEducationAtLeast(sex, a, c.education));
+      rows.push({
+        label: `הכנסה מ-\u2066${c.minIncome.toLocaleString('he-IL')}\u2069 ש"ח`,
+        share: edu > 0 ? clamp01(joint / edu) : 0
+      });
     }
     if (c.smokes !== 'any') {
       rows.push({ label: c.smokes === 'yes' ? T.smokes : T.noSmokes,
@@ -336,16 +381,19 @@ const CALC = (() => {
         share: weightedAvg(a => c.bald === 'yes' ? pBald(sex, a) : 1 - pBald(sex, a))
       });
     }
-    if (c.hair && c.hair.length) {
-      rows.push({ label: 'צבע שיער', share: pHair });
-    }
-    if (c.eyes && c.eyes.length) {
-      rows.push({ label: 'צבע עיניים', share: pEyes });
+    if ((c.hair && c.hair.length) || (c.eyes && c.eyes.length)) {
+      const both = (c.hair && c.hair.length) && (c.eyes && c.eyes.length);
+      rows.push({
+        label: (both ? 'צבע שיער ועיניים' : (c.hair && c.hair.length) ? 'צבע שיער' : 'צבע עיניים')
+               + ' (אומדן)',
+        share: pLooks
+      });
     }
     return rows;
   }
 
-  return { calculate, normalCdf, logNormalTail, pHeight, pIncomeAtLeast, pOrientation, pBald };
+  return { calculate, normalCdf, logNormalTail, pHeight, pIncomeAtLeast, pOrientation, pBald,
+           pEducationAndIncome, pHairAndEyes };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = CALC;
