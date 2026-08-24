@@ -367,12 +367,10 @@ const DATA = (() => {
    * ------------------------------------------------------------- */
   const HAIR = {
     options: [
-      { id: 'black',      label: 'שחור',      p: 0.24 },
-      { id: 'dark_brown', label: 'חום כהה',   p: 0.38 },
-      { id: 'brown',      label: 'חום',       p: 0.22 },
-      { id: 'light_brown',label: 'חום בהיר',  p: 0.09 },
-      { id: 'blonde',     label: 'בלונדיני',  p: 0.06 },
-      { id: 'red',        label: "ג'ינג'י",   p: 0.01 }
+      { id: 'black',  label: 'שחור',     p: 0.24 },
+      { id: 'brown',  label: 'חום',      p: 0.69 },
+      { id: 'blonde', label: 'בלונדיני', p: 0.06 },
+      { id: 'red',    label: "ג'ינג'י",  p: 0.01 }
     ],
     estimate: true
   };
@@ -382,12 +380,13 @@ const DATA = (() => {
      לכל אחד משני השדות מכפיל את הסינון הרבה מעבר למציאות.
      כל שורה מסתכמת ל-1. השוליים הנגזרים מהמטריצה תואמים את EYES.options. */
   const EYES_BY_HAIR = {
-    black:       { brown: 0.88, green: 0.09, blue: 0.02, gray: 0.01 },
-    dark_brown:  { brown: 0.82, green: 0.12, blue: 0.05, gray: 0.01 },
-    brown:       { brown: 0.66, green: 0.21, blue: 0.11, gray: 0.02 },
-    light_brown: { brown: 0.45, green: 0.27, blue: 0.25, gray: 0.03 },
-    blonde:      { brown: 0.22, green: 0.28, blue: 0.45, gray: 0.05 },
-    red:         { brown: 0.30, green: 0.40, blue: 0.26, gray: 0.04 },
+    black:  { brown: 0.8800, green: 0.0900, blue: 0.0200, gray: 0.0100 },
+    /* שורת החום היא הממוצע המשוקלל של חום כהה, חום וחום בהיר שהיו קודם
+       נפרדים (0.38 / 0.22 / 0.09). האיחוד אינו משנה את השוליים של צבע
+       העיניים — הם יוצאים זהים עד הספרה השישית. */
+    brown:  { brown: 0.7207, green: 0.1683, blue: 0.0952, gray: 0.0158 },
+    blonde: { brown: 0.2200, green: 0.2800, blue: 0.4500, gray: 0.0500 },
+    red:    { brown: 0.3000, green: 0.4000, blue: 0.2600, gray: 0.0400 },
     estimate: true
   };
 
