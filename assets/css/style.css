@@ -200,6 +200,26 @@ body{
 }
 @media (max-width:400px){.result__actions{flex-direction:column}}
 
+/* כוכב בגיטהאב — קישור, לא פעולה: דף סטטי אינו יכול לסמן כוכב
+   בשם המבקר, ולכן הכפתור מוביל למאגר שם לחיצה אחת עושה זאת */
+.star{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  margin-top:12px;padding:13px;border-radius:var(--radius);
+  border:1px solid rgba(255,255,255,.22);
+  color:var(--cream);text-decoration:none;font-size:.95rem;
+  transition:background .16s,border-color .16s;
+}
+.star:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.4)}
+.star:focus-visible{outline:2px solid var(--bar);outline-offset:2px}
+.star__icon{color:#e8b64c;font-size:1.15rem;line-height:1}
+.star__count{
+  background:rgba(255,255,255,.14);border-radius:var(--pill);
+  padding:1px 9px;font-size:.82rem;font-variant-numeric:tabular-nums;
+}
+.foot__links{margin-top:8px}
+.foot__links a{color:var(--cream-2);text-decoration:underline}
+.foot__links a:hover{color:#fff}
+
 /* ---------- method / sources ---------- */
 .method{margin:52px 0 40px;border-top:1px solid var(--line);padding-top:30px}
 .method h2{

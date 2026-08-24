@@ -425,6 +425,24 @@
     box.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  /* מספר הכוכבים במאגר. נקודת קצה ציבורית ללא אימות; אם היא חסומה או
+     מוגבלת בקצב, פשוט לא מציגים מספר — הקישור עצמו עובד בכל מקרה. */
+  function initStarCount() {
+    const link = $('#starBtn');
+    const out = $('#starCount');
+    if (!link || !out) return;
+    const m = link.href.match(/github\.com\/([^/]+)\/([^/?#]+)/);
+    if (!m) return;
+    fetch(`https://api.github.com/repos/${m[1]}/${m[2]}`, { headers: { Accept: 'application/vnd.github+json' } })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (!d || typeof d.stargazers_count !== 'number') return;
+        out.textContent = nf.format(d.stargazers_count);
+        out.hidden = false;
+      })
+      .catch(() => { /* אין מספר — לא נורא */ });
+  }
+
   function initSources() {
     const ul = $('#sourcesList');
     DATA.SOURCES.forEach(s => {
@@ -449,6 +467,7 @@
     initControls();
     initRanges();
     initSources();
+    initStarCount();
     updateHero();
 
     function run() {
