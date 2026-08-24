@@ -160,6 +160,11 @@ const CALC = (() => {
     return clamp01(targetSex === seekerSex ? homo + bi : straight + bi);
   }
 
+  /* קרחת נראית לעין. אומדן — ראו BALDNESS_BANDS ב-data.js. */
+  function pBald(sex, age) {
+    return clamp01(D.pickBand(D.BALDNESS_BANDS, age)[sex]);
+  }
+
   function pUnmarried(sex, age) {
     return clamp01(D.pickBand(D.UNMARRIED_BANDS, age)[sex]);
   }
@@ -229,6 +234,9 @@ const CALC = (() => {
       if (c.excludeMarried) p *= pUnmarried(sex, a);
       if (c.excludeObese) p *= (1 - pObese(sex, a));
 
+      if (c.bald === 'yes') p *= pBald(sex, a);
+      else if (c.bald === 'no') p *= (1 - pBald(sex, a));
+
       p *= pHair;
       p *= pEyes;
 
@@ -255,7 +263,9 @@ const CALC = (() => {
       noDrinks: m ? 'לא שותה אלכוהול' : 'לא שותה אלכוהול',
       wants: m ? 'רוצה ילדים' : 'רוצה ילדים',
       noWants: m ? 'לא רוצה ילדים' : 'לא רוצה ילדים',
-      single: m ? 'לא נשוי' : 'לא נשואה'
+      single: m ? 'לא נשוי' : 'לא נשואה',
+      bald: m ? 'קירח' : 'קירחת',
+      noBald: m ? 'לא קירח' : 'לא קירחת'
     };
     /* ממוצע משוקלל של הסתברות תנאי על פני טווח הגיל */
     function weightedAvg(fn) {
@@ -320,6 +330,12 @@ const CALC = (() => {
     if (c.excludeObese) {
       rows.push({ label: 'ללא השמנה (BMI מתחת ל-30)', share: weightedAvg(a => 1 - pObese(sex, a)) });
     }
+    if (c.bald && c.bald !== 'any') {
+      rows.push({
+        label: (c.bald === 'yes' ? T.bald : T.noBald) + ' (אומדן)',
+        share: weightedAvg(a => c.bald === 'yes' ? pBald(sex, a) : 1 - pBald(sex, a))
+      });
+    }
     if (c.hair && c.hair.length) {
       rows.push({ label: 'צבע שיער', share: pHair });
     }
@@ -329,7 +345,7 @@ const CALC = (() => {
     return rows;
   }
 
-  return { calculate, normalCdf, logNormalTail, pHeight, pIncomeAtLeast, pOrientation };
+  return { calculate, normalCdf, logNormalTail, pHeight, pIncomeAtLeast, pOrientation, pBald };
 })();
 
 if (typeof module !== 'undefined' && module.exports) module.exports = CALC;
