@@ -127,21 +127,23 @@ body{
 }
 .range input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--green);outline-offset:2px}
 
-/* extras */
-.extras{
-  margin:16px 0 4px;border:1px dashed var(--line);border-radius:var(--radius);
-  padding:0 16px;background:rgba(255,255,255,.35);
-}
-.extras summary{
-  cursor:pointer;padding:16px 0;font-weight:500;color:var(--green-2);
-  display:flex;align-items:center;gap:10px;
-}
-.extras[open] summary{border-bottom:1px solid var(--line)}
+/* estimate badge — marks a field with no official Israeli source */
 .tag{
   background:var(--warn);color:#fff;font-size:.68rem;font-weight:500;
   padding:2px 9px;border-radius:var(--pill);letter-spacing:.03em;
 }
-.extras__note{font-size:.86rem;color:var(--ink-soft);margin:14px 0 4px}
+.tag--est{
+  background:transparent;color:var(--warn);border:1px solid var(--warn);
+  padding:1px 7px;font-size:.64rem;white-space:nowrap;
+  vertical-align:middle;margin-inline-start:4px;
+}
+.legend{
+  display:flex;gap:8px;align-items:baseline;
+  font-size:.82rem;color:var(--muted);margin:14px 0 0;
+  border-top:1px solid var(--line);padding-top:14px;
+}
+.legend .tag--est{flex:none;margin:0}
+.legend a{color:var(--ink-soft)}
 
 /* cta */
 .cta{
