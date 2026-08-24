@@ -376,13 +376,17 @@
     };
   }
 
+  /* אף פעם לא בכתיב מדעי: "1.6e-7%" אינו מספר שאפשר לקרוא.
+     toFixed לעולם אינו מייצר מעריך, בשונה מ-toExponential ומ-toPrecision. */
   function formatPercent(p) {
+    if (!(p > 0)) return '0%';
     if (p >= 10) return p.toFixed(1).replace(/\.0$/, '') + '%';
-    if (p >= 1)  return p.toFixed(1) + '%';
+    if (p >= 1) return p.toFixed(1) + '%';
     if (p >= 0.1) return p.toFixed(2) + '%';
-    if (p >= 0.001) return p.toFixed(3) + '%';
-    if (p <= 0) return '0%';
-    return p.toExponential(1) + '%';
+    if (p >= 0.01) return p.toFixed(3) + '%';
+    if (p >= 0.001) return p.toFixed(4) + '%';
+    const s = p.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+    return (Number(s) === 0 ? '0' : s) + '%';
   }
 
   let lastShare = null;
@@ -392,9 +396,15 @@
     const verb = c.sex === 'male' ? 'עומדים' : 'עומדות';
     const one  = c.sex === 'male' ? 'אחד' : 'אחת';
     const verb1 = c.sex === 'male' ? 'עומד' : 'עומדת';
-    $('#resultPct').innerHTML = ltr(formatPercent(res.percent));
 
+    /* מתחת לאדם אחד אין מה להציג: אחוז כמו 0.00000016% מתאר שבריר של אדם,
+       ולכן הכותרת מראה 0 והמשפט מתאר שאין כאלה. שתי השורות נגזרות מאותה
+       החלטה אחת ולכן אינן יכולות לסתור זו את זו. */
     const count = Math.round(res.count);
+    const shownPercent = count < 1 ? 0 : res.percent;
+
+    $('#resultPct').innerHTML = ltr(formatPercent(shownPercent));
+
     let sub;
     if (count < 1) {
       sub = `לפי הנתונים, כמעט אף ${one} מ-${ltr(nf.format(Math.round(res.totalPool)))} ה${noun}
