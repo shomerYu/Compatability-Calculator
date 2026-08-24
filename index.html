@@ -33,7 +33,7 @@
   <form id="form" class="panel" autocomplete="off">
 
     <div class="row">
-      <label class="row__label">אני</label>
+      <label class="row__label">אני <span class="tag tag--est">אומדן</span></label>
       <div class="seg" data-name="seekerSex">
         <button type="button" class="seg__btn is-on" data-value="male">גבר</button>
         <button type="button" class="seg__btn" data-value="female">אישה</button>
@@ -99,7 +99,7 @@
     </div>
 
     <div class="row">
-      <label class="row__label">שותה אלכוהול</label>
+      <label class="row__label">שותה אלכוהול <span class="tag tag--est">אומדן</span></label>
       <div class="seg" data-name="drinks">
         <button type="button" class="seg__btn is-on" data-value="any">הכל</button>
         <button type="button" class="seg__btn" data-value="yes">כן</button>
@@ -123,40 +123,34 @@
       </div>
     </div>
 
-    <details class="extras">
-      <summary>
-        מאפיינים ללא מקור ממשלתי
-        <span class="tag">אומדן</span>
-      </summary>
-      <p class="extras__note">
-        למדינת ישראל אין נתונים רשמיים על צבע שיער, צבע עיניים או כוונות ילודה ברמת הפרט.
-        השדות האלה מבוססים על אומדנים בלבד, ולכן הם מחוץ למחשבון עצמו כברירת מחדל.
-      </p>
-
-      <div class="row">
-        <label class="row__label">רוצה ילדים</label>
-        <div class="seg" data-name="wantsKids">
-          <button type="button" class="seg__btn is-on" data-value="any">הכל</button>
-          <button type="button" class="seg__btn" data-value="yes">כן</button>
-          <button type="button" class="seg__btn" data-value="no">לא</button>
-        </div>
+    <div class="row">
+      <label class="row__label">רוצה ילדים <span class="tag tag--est">אומדן</span></label>
+      <div class="seg" data-name="wantsKids">
+        <button type="button" class="seg__btn is-on" data-value="any">הכל</button>
+        <button type="button" class="seg__btn" data-value="yes">כן</button>
+        <button type="button" class="seg__btn" data-value="no">לא</button>
       </div>
+    </div>
 
-      <div class="row row--chips">
-        <span class="row__label">צבע שיער</span>
-        <div class="chips" id="hair" role="group"></div>
-      </div>
+    <div class="row row--chips">
+      <span class="row__label">צבע שיער <span class="tag tag--est">אומדן</span></span>
+      <div class="chips" id="hair" role="group"></div>
+    </div>
 
-      <div class="row row--chips">
-        <span class="row__label">צבע עיניים</span>
-        <div class="chips" id="eyes" role="group"></div>
-      </div>
-    </details>
+    <div class="row row--chips">
+      <span class="row__label">צבע עיניים <span class="tag tag--est">אומדן</span></span>
+      <div class="chips" id="eyes" role="group"></div>
+    </div>
 
     <button type="submit" class="cta">בואו נגלה</button>
 
     <p class="disclaimer">
       מחושב לפי נתוני הלשכה המרכזית לסטטיסטיקה ומשרד הבריאות
+    </p>
+    <p class="legend">
+      <span class="tag tag--est">אומדן</span>
+      אין לשדה הזה מקור ממשלתי בישראל. הערכים שבו נבחרו על ידי מחבר הכלי ואינם
+      נגזרים מסקר כלשהו — <a href="#sources">פירוט מלא בשיטת החישוב</a>.
     </p>
   </form>
 
@@ -202,8 +196,23 @@
     <ul class="sources" id="sourcesList"></ul>
 
     <p class="method__caveat">
-      חלק מהערכים חושבו על ידי כיול לנתונים המפורסמים ולא הועתקו מלוח יחיד.
-      כל מספר מופיע בקובץ <code>assets/js/data.js</code> יחד עם המקור שלו וניתן לעדכון.
+      לכל מספר בכלי יש אחד משלושה מעמדים, והוא מתועד ככזה בקובץ
+      <code>assets/js/data.js</code> ובקובץ <code>SOURCES.md</code>:
+    </p>
+    <ul class="grades">
+      <li><strong>מדווח</strong> — המספר מופיע ככתבו בפרסום רשמי של הלמ״ס או משרד הבריאות.</li>
+      <li><strong>מכויל</strong> — פילוח שנבנה כך שסך-הכל שלו מתיישב עם מספר מדווח.
+          הסך נכון; החלוקה הפנימית היא בנייה של מחבר הכלי.</li>
+      <li><strong>אומדן</strong> — אין מקור ממשלתי. הערך נבחר על ידי מחבר הכלי
+          ואינו נגזר מסקר. שדות אלה מסומנים בתגית ״אומדן״ בטופס.</li>
+    </ul>
+    <p class="method__caveat">
+      בפירוט: צבע שיער וצבע עיניים נבחרו ללא כל מקור. הרצון בילדים נשען על שיעור
+      הפריון שמפרסמת הלמ״ס, אך עקומת הדעיכה לפי גיל היא בנייה. הנטייה המינית
+      עוצבה לפי סדרי גודל המקובלים בסקרים בין-לאומיים, לא לפי מקור ישראלי.
+      צריכת האלכוהול הגיעה מדיווח עיתונאי המצטט השוואה בין-לאומית, והמקדמים לפי
+      קבוצת אוכלוסייה הם בנייה. סטיית התקן של הגובה היא ערך מקובל ולא ערך שפורסם —
+      הממוצעים עצמם כן מדווחים.
     </p>
   </section>
 </main>
