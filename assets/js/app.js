@@ -221,6 +221,7 @@
       wantsKids: segState.wantsKids,
       excludeMarried: segState.excludeMarried === 'yes',
       excludeObese: segState.excludeObese === 'yes',
+      bald: segState.bald,
       hair: chipValues('hair'),
       eyes: chipValues('eyes')
     };
